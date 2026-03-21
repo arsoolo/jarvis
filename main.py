@@ -24,7 +24,7 @@ MARVEL_QUOTES = {
 }
 
 # Список матов для Капитана Америки
-CAPTAIN_WORDS = ["нищий", "тупой", "еблан", "сучка"]
+CAPTAIN_WORDS = ["нищий", "тупой", "еблан", "сучка", "пидр", "пидорас", "хуесос", "хуеглот", "уебок", "уебище"]
 
 @dp.message(F.new_chat_members)
 async def welcome(message: types.Message):
