@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, types, executor
 from datetime import datetime, timedelta
 
 # --- ПРОТОКОЛ ДОСТУПА ---
-TOKEN = "ВАШ_ТОКЕН_ЗДЕСЬ" 
+TOKEN = "8756906168:AAEKFWK8SLeG_3fdWB-zgTiYP_IQnMpdFzE" 
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
