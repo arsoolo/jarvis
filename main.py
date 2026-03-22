@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot, Dispatcher, types, executor
 
 # 1. ЗАГРУЗКА ДАННЫХ (САМЫЙ ВЕРХ)
-TOKEN = "ВАШ_ТОКЕН_ЗДЕСЬ"
+TOKEN = "8756906168:AAEKFWK8SLeG_3fdWB-zgTiYP_IQnMpdFzE"
 BAD_WORDS = ['сука', 'блять', 'хуй', 'пидор', 'еблан', 'уебок']
 
 logging.basicConfig(level=logging.INFO)
