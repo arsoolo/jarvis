@@ -2,61 +2,61 @@ import logging
 from aiogram import Bot, Dispatcher, types, executor
 from datetime import datetime, timedelta
 
-# 1. ЗАГРУЗКА ДАННЫХ
+# --- КОНФИГУРАЦИЯ ---
 TOKEN = "8156906168:AAEkPwK8SLo6_3fdmB-zgT1YP_IQnNpdFzE" 
-BAD_WORDS = ['сука', 'блять', 'хуй', 'пидор', 'еблан', 'уебок']
-user_messages = {} 
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
+user_messages = {} # Память для анти-спама
+
+# 1. ПРИВЕТСТВИЕ НОВЫХ УЧАСТНИКОВ
+@dp.message_handler(content_types=[types.ContentType.NEW_CHAT_MEMBERS])
+async def welcome(message: types.Message):
+    for user in message.new_chat_members:
+        await message.reply(f"Добро пожаловать, {user.first_name}! Протоколы безопасности активированы.")
+
+# 2. ОСНОВНОЙ ОБРАБОТЧИК (ЦИТАТЫ И АНТИ-СПАМ)
 @dp.message_handler(lambda m: m.text)
-async def main_logic(message: types.Message):
+async def main_handler(message: types.Message):
     text = message.text.lower()
     user_id = message.from_user.id
 
-    # --- АНТИ-СПАМ ---
+    # --- БЛОК АНТИ-СПАМА ---
     now = datetime.now()
-    if user_id not in user_messages: user_messages[user_id] = []
+    if user_id not in user_messages:
+        user_messages[user_id] = []
+    
+    # Очистка старых записей (сообщения старше 10 секунд удаляем из памяти)
     user_messages[user_id] = [t for t in user_messages[user_id] if now - t < timedelta(seconds=10)]
     user_messages[user_id].append(now)
+
+    # Если больше 5 сообщений за 10 секунд — мут на 20 минут
     if len(user_messages[user_id]) > 5:
         try:
-            await message.chat.restrict(user_id, until_date=timedelta(minutes=5))
-            return await message.answer("Сэр, слишком много шума. Режим тишины на 5 минут.")
-        except: pass
+            # Устанавливаем время разблокировки: текущее время + 20 минут
+            until_date = datetime.now() + timedelta(minutes=20)
+            await message.chat.restrict(user_id, until_date=until_date)
+            return await message.answer(f"Сэр, {message.from_user.first_name} слишком шумит. Объявлен режим тишины на 20 минут.")
+        except:
+            pass # Если бот не админ, он не сможет ограничить доступ
 
-    # --- ОТКЛИК НА ИМЯ ДЖАРВИС ---
-    if any(x in text.upper() for x in ["ДЖАРВИС", "Д.Ж.А.Р.В.И.С"]):
-        return await message.reply("Я вас слушаю, сэр. К вашим услугам.")
+    # --- БЛОК ЦИТАТ ---
+    quotes = {
+        "джарвис": "Я вас слушаю, сэр. К вашим услугам.",
+        "тони": "Я — Железный человек.",
+        "тор": "Я Бог Грома! Подайте мне Таноса!",
+        "халк": "Халк крушить!",
+        "кэп": "Я могу это делать весь день.",
+        "капитан": "Я могу это делать весь день.",
+        "наташа": "Я больше не хочу бежать от своего прошлого.",
+        "бартон": "Никто не видел, как я промахнулся."
+    }
 
-    # --- КОМАНДЫ МУТА/РАЗМУТА ---
-    if text.startswith('!мут') or text.startswith('!размут'):
-        user_status = await message.chat.get_member(user_id)
-        if user_status.is_chat_admin() or user_status.is_chat_creator():
-            if not message.reply_to_message:
-                return await message.reply("Сэр, укажите цель (ответьте на сообщение).")
-            can_send = True if '!размут' in text else False
-            try:
-                await message.chat.restrict(message.reply_to_message.from_user.id, 
-                    permissions=types.ChatPermissions(can_send_messages=can_send, can_send_media_messages=can_send, can_send_other_messages=can_send))
-                await message.reply("Протокол выполнен.")
-            except:
-                await message.reply("Недостаточно прав администратора.")
-        return
-
-    # --- ЦИТАТЫ ГЕРОЕВ ---
-    hero_quotes = {"тор": "Я Бог Грома!", "халк": "Халк крушить!", "тони": "Я — Железный человек.", "кэп": "Я могу это делать весь день."}
-    for hero, quote in hero_quotes.items():
-        if hero in text:
+    for name, quote in quotes.items():
+        if name in text:
             return await message.reply(f"🛡️ {quote}")
-
-    # --- КЭП И МАТЫ ---
-    if any(word in text for word in BAD_WORDS):
-        user_status = await message.chat.get_member(user_id)
-        if not (user_status.is_chat_admin() or user_status.is_chat_creator()):
-            await message.reply("⚠️ Капитан Америка: «Не выражаться!» 🛡️")
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
